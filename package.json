@@ -16,7 +16,7 @@
   },
   "scripts": {
     "test": "mocha index.spec.js",
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",

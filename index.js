@@ -1,30 +1,75 @@
 const express = require('express');
-
-// ROUTING
-const admin = require('./routes/admin');
-const contacts = require('./routes/contacts');
-
-//view engine
 const nunjucks = require('nunjucks');
+const bodyparser = require('body-parser');
+const morgan = require('morgan');
 
-const app = express();
 
-app.use('/admin', admin); // admin부터는 니가 처리
-app.use('/contacts', contacts);
+class App {
+    constructor() {
+        this.app = express(); 
+        
+        // 뷰엔진
+        this.setViewEngine();
 
-const port = 3030;
+        // 미들웨어
+        this.setMiddleWare();
 
-nunjucks.configure('templates', {
-    autoescape : true, // 오류공격 태그를 걸러준다
-    express: app, // 객체 설정
-});
+        // 정적디렉토리
+        this.setStatics();
 
-app.get('/', (req, res) => {
-    res.send('express start');
-})
+        // 로컬변수
+        this.setLocals();
 
-app.listen(port, () => {
-    console.log(`Start Server... PORT number: ${port}`);
-})
+        // 라우팅
+        this.getRouting();
 
-module.exports = app;
+        // 404
+        this.status404();
+
+        // Error
+        this.errorHandler();
+    }
+
+    setMiddleWare() {
+        this.app.use(morgan('dev'));
+        this.app.use(bodyparser.json());
+        this.app.use(bodyparser.urlencoded({ extended: false }));
+    }
+
+    setViewEngine() {
+        nunjucks.configure('templates', {
+            autoescape: true,
+            express: this.app
+        });
+    }
+
+    setStatics() {
+        this.app.use('/uploads', express.static('uploads'));
+    }
+
+    setLocals() {
+        this.app.use((req, res, next) => {
+            this.app.locals.isLogin = true;
+            this.app.locals.req_path = req.path;
+            next();
+        });
+    }
+
+    getRouting() {
+        this.app.use(require('./controllers'));
+    }
+
+    status404() {
+        this.app.use((req, res) => {
+            res.status(404).render('common/404.html');
+        });
+    }
+
+    errorHandler() {
+        this.app.use((err, req, res) => {
+            res.status(500).render('common/500.html');
+        });
+    }
+}
+
+module.exports = new App().app;
