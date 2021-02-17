@@ -5,3 +5,5 @@
 2021.02.14 nunjucks공부중
 
 2021.02.16 express 구조정리
+
+2021.02.17 sqeuelize
